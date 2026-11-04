@@ -46,4 +46,6 @@ The project folder must contain `main.go`, the three banner files (`standard.txt
 5. For each word, the art is built row by row: for each of the 8 rows, the matching line of every character is added side by side, followed by a newline. Rows are drawn on the outside and characters on the inside, because the characters sit next to each other.
 6. The finished string is passed to the template with `html/template`, which places it in the result text area.
 
-A few lines of JavaScript in the page shrink the font when the art is wider than the box, so the drawing always fits.
+A few lines of JavaScript in the page shrink the font when the art is wider than the box, so the drawing always fits.# Ascii-art-stylize
+# Ascii-art-stylize
+# Ascii-art-stylize
