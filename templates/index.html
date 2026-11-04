@@ -1,138 +1,69 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Turn your text into ASCII art banners.">
     <title>ASCII Art Web</title>
-    <style>
-        body {
-            font-family: system-ui, sans-serif;
-            background: #eef1f8;
-            color: #1f2937;
-            margin: 0;
-            padding: 2rem 1rem;
-        }
-        .card {
-            max-width: 900px;
-            margin: 0 auto;
-            background: #ffffff;
-            border-radius: 12px;
-            padding: 2rem;
-            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
-        }
-        h1 {
-            margin: 0 0 1.5rem;
-            color: #4f46e5;
-        }
-        label {
-            font-weight: 600;
-        }
-        form {
-            display: flex;
-            flex-direction: column;
-            gap: 1rem;
-            margin-bottom: 1.5rem;
-        }
-        input[type="text"] {
-            padding: 0.75rem;
-            font-size: 1rem;
-            border: 2px solid #d1d5db;
-            border-radius: 8px;
-        }
-        input[type="text"]:focus {
-            outline: none;
-            border-color: #003337;
-        }
-        .banners {
-            display: flex;
-            gap: 1.5rem;
-            flex-wrap: wrap;
-        }
-        .banners label {
-            font-weight: 400;
-            margin-left: 0.25rem;
-        }
-        input[type="submit"] {
-            align-self: flex-start;
-            padding: 0.75rem 2rem;
-            font-size: 1rem;
-            color: #ffffff;
-            background: #4f46e5;
-            border: none;
-            border-radius: 8px;
-            cursor: pointer;
-        }
-        input[type="submit"]:hover {
-            background: #4338ca;
-        }
-        textarea {
-            width: 100%;
-            box-sizing: border-box;
-            margin-top: 0.5rem;
-            padding: 1rem;
-            font-family: monospace;
-            font-size: 14px;
-            white-space: pre;
-            overflow-x: auto;
-            overflow-y: auto;
-            background: #111827;
-            color: #a7f3d0;
-            border: none;
-            border-radius: 8px;
-            resize: none;
-        }
-    </style>
+    <link rel="stylesheet" href="/static/css/style.css">
 </head>
 
 <body>
-    <div class="card">
-        <h1>ASCII Art Web</h1>
+    <main class="card">
+        <header class="page-header">
+            <div class="logo" aria-hidden="true">A_</div>
+            <h1>ASCII Art Web</h1>
+            <p class="subtitle">Type some text, pick a font, and turn it into ASCII art.</p>
+        </header>
 
-        <form method="post" action="/ascii-art">
-            <label for="input">Your text</label>
-            <input type="text" name="theInput" id="input" placeholder="Type here, use \n for a new line">
-
-            <div class="banners">
-                <span>
-                    <input type="radio" name="banner" value="standard.txt" id="first" {{ if or (eq .Banner "standard.txt") (eq .Banner "") }}checked{{ end }}>
-                    <label for="first">standard</label>
-                </span>
-                <span>
-                    <input type="radio" name="banner" value="shadow.txt" id="second" {{ if eq .Banner "shadow.txt" }}checked{{ end }}>
-                    <label for="second">shadow</label>
-                </span>
-                <span>
-                    <input type="radio" name="banner" value="thinkertoy.txt" id="third" {{ if eq .Banner "thinkertoy.txt" }}checked{{ end }}>
-                    <label for="third">thinkertoy</label>
-                </span>
+        <form id="art-form" method="post" action="/ascii-art">
+            <div class="field">
+                <label for="input">Your text</label>
+                <textarea name="theInput" id="input" rows="3" placeholder="Hello" aria-describedby="hint counter error">
+{{ .Text }}</textarea>
+                <div class="field-meta">
+                    <span id="hint">Enter adds a new line · Ctrl/⌘ + Enter draws</span>
+                    <span id="counter" aria-live="polite">0 characters</span>
+                </div>
+                <p id="error" class="error" role="alert">{{ .Error }}</p>
             </div>
 
-            <input type="submit" value="Submit">
+            <fieldset class="fonts">
+                <legend>Font</legend>
+                <label class="font-option">
+                    <input type="radio" name="banner" value="standard.txt" {{ if or (eq .Banner "standard.txt") (eq .Banner "") }}checked{{ end }}>
+                    <span>Standard</span>
+                </label>
+                <label class="font-option">
+                    <input type="radio" name="banner" value="shadow.txt" {{ if eq .Banner "shadow.txt" }}checked{{ end }}>
+                    <span>Shadow</span>
+                </label>
+                <label class="font-option">
+                    <input type="radio" name="banner" value="thinkertoy.txt" {{ if eq .Banner "thinkertoy.txt" }}checked{{ end }}>
+                    <span>Thinkertoy</span>
+                </label>
+            </fieldset>
+
+            <div class="buttons">
+                <button type="submit" id="draw" class="btn btn-primary">Draw</button>
+                <button type="submit" id="download" class="btn btn-secondary" formaction="/download">Download .txt</button>
+            </div>
         </form>
 
-        <label for="output">Result</label>
-        <textarea id="output" readonly wrap="off" rows="3">{{ .Result }}</textarea>
-    </div>
+        <section class="result" aria-labelledby="result-title">
+            <div class="result-header">
+                <h2 id="result-title">Result</h2>
+                {{ if .Result }}<button type="button" id="copy" class="btn btn-ghost">Copy</button>{{ end }}
+            </div>
+            {{ if .Result }}
+            <textarea id="output" readonly wrap="off" rows="3" aria-label="ASCII art result">
+{{ .Result }}</textarea>
+            {{ else }}
+            <p class="empty">Your art will appear here.</p>
+            {{ end }}
+        </section>
+    </main>
 
-    <script>
-        var out = document.getElementById("output");
-
-        function fit() {
-            var size = 14;
-            out.style.fontSize = size + "px";
-
-            while (out.scrollWidth > out.clientWidth && size > 4) {
-                size--;
-                out.style.fontSize = size + "px";
-            }
-
-            out.style.height = "auto";
-            out.style.height = out.scrollHeight + "px";
-        }
-
-        fit();
-        window.addEventListener("resize", fit);
-    </script>
+    <script src="/static/js/script.js"></script>
 </body>
 </html>
